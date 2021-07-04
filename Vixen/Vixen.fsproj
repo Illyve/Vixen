@@ -7,10 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Remove="Tests\**" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <Content Include="Tests\test1.txt" />
+    <Compile Include="Vixen\Lexer.fs" />
     <Compile Include="Vixen\Program.fs" />
   </ItemGroup>
 
