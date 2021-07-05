@@ -9,9 +9,8 @@
   <ItemGroup>
     <Content Include="Tests\test1.txt" />
     <Compile Include="Vixen\Lexer.fs" />
+    <Compile Include="Vixen\Parser.fs" />
     <Compile Include="Vixen\Program.fs" />
   </ItemGroup>
-
-  <ItemGroup />
 
 </Project>
