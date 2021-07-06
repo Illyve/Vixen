@@ -77,7 +77,7 @@ let GetString context =
     let rec Loop context acc =
         match context.Input with
         | c :: tail when Char.IsLetterOrDigit c -> Loop (NextChar context) (c :: acc)
-        | _ -> (acc |> List.rev, NextChar context)
+        | _ -> (acc |> List.rev, context)
     match Loop context [] with
     | ([], _) -> None
     | (digits, tail) -> 
