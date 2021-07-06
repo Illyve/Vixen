@@ -11,6 +11,9 @@
     <Content Include="Tests\test1.txt" />
     <Compile Include="Vixen\Lexer.fs" />
     <Compile Include="Vixen\Parser.fs" />
+    <Compile Include="Vixen\Analyzer.fs" />
+    <Compile Include="Vixen\CodeGenerator.fs" />
+    <Compile Include="Vixen\Generator.fs" />
     <Compile Include="Vixen\Program.fs" />
   </ItemGroup>
 
