@@ -10,6 +10,7 @@
     <None Include="Tests\test1.s" />
     <Content Include="Tests\test1.txt" />
     <Compile Include="Vixen\Lexer.fs" />
+	<Compile Include="Vixen\Symbols.fs" />
     <Compile Include="Vixen\Parser.fs" />
     <Compile Include="Vixen\Analyzer.fs" />
     <Compile Include="Vixen\CodeGenerator.fs" />
