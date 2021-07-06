@@ -1,5 +1,6 @@
 ﻿open System
 open System.IO
+open CodeGenerator
 
 [<EntryPoint>]
 let main argv =
