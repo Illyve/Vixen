@@ -1,2 +1,6 @@
-123 * fsdi + decl / 348 ( { ) . } [ dfjl ] 34 "adf"
- 
+ decl x = 34
+decl x = (int y )
+{
+	decl a = 4
+	a = a + 4
+}
