@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="Tests\test1.s" />
     <Content Include="Tests\test1.txt" />
     <Compile Include="Vixen\Lexer.fs" />
     <Compile Include="Vixen\Parser.fs" />
