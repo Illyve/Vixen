@@ -28,6 +28,7 @@ type Statement =
     | GlobalDeclaration of string * Expression
     | Declaration of string * Expression
     | FunctionDeclaration of string * Expression list * Statement
+    | StructureDefinition of string * Statement list
     | FunctionCall of string * Expression list
     | Assignment of string * Expression
     | If of Expression * Statement
@@ -40,6 +41,8 @@ and Expression =
     | IntLit of int
     | StringLit of string
     | Identifier of string
+    | Array of string * Expression
+    | Object of string
     | FunctionCall of string * Expression list
     | Parameter of string * string
     | BinaryExpression of Expression * Token * Expression
@@ -71,6 +74,18 @@ let rec ParsePrimary input =
                 Lift (FunctionCall (ident, parameters)))
         | _ -> 
             Success (Identifier ident, tail)
+    | (Token.Keyword "new", _) :: tail ->
+        tail
+        |> (ParseIdentifierAsString >>= fun valType remaining ->
+            match remaining with
+            | (Token.LeftBracket, _) :: tail2 -> 
+                tail2 
+                |> (ParseExpression >>= fun length ->
+                    ParseTokens [ Token.RightBracket ] >>= fun _ ->
+                    Lift (Array (valType, length)))
+            | _ -> 
+                remaining 
+                |> Lift (Object valType))
     | (token, { Line = line; Column = col }) :: tail -> Failure $"Expected primary on line: {line} column: {col}, got {token}."
     | [] -> Failure $"Expected primary, got EOF."
 
@@ -158,6 +173,9 @@ and ParseStatement input =
     match input with
     | (Token.Keyword "decl", _) :: tail -> ParseDeclaration input
     | (Token.Keyword "if", _) :: tail -> ParseIf input
+    | (Token.Keyword "while", _) :: tail -> ParseWhile input
+    | (Token.Keyword "for", _) :: tail -> ParseFor input
+    | (Token.Keyword "return", _) :: tail -> ParseReturn input
     | (Token.Identifier ident, _) :: tail -> ParseAssignment input
     | (token, { Line = line; Column = col }) :: tail -> Failure $"Unexpected token {token} on line: {line} column: {col}."
     | [] -> Failure $"Unexpected EOF."

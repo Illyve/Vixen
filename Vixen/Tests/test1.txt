@@ -1,6 +1,6 @@
- decl x = 34
-decl x = (int y )
+ decl x = (int y)
 {
-	decl a = 4
+	decl a = new int[4]
+	decl b = new a
 	a = a + 4
 }
