@@ -1,6 +1,7 @@
- decl x = 34
-decl x = (int y )
+decl x = 34
+decl w = (int y )
 {
-	decl a = 4
+	decl a = "4"
 	a = a + 4
+	return a
 }
