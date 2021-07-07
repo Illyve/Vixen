@@ -8,12 +8,14 @@ type Token =
     | Keyword of string
     | Identifier of string
     | Assign
-    | Plus | Minus | Star | Slash
+    | Plus | Minus | Star | Slash | Power | Modulo
     | Equals | NotEquals | LessThan | GreaterThan | LessEquals | GreaterEquals
+    | And | Or | Not | Xor | Tilde
     | LeftBrace | RightBrace
     | LeftParen | RightParen
     | LeftBracket | RightBracket
-    | Period
+    | Period | Comma
+    | Ampersand | Bar
 
 type Position = { Line : int; Column : int }
 
@@ -55,8 +57,10 @@ let (|Symbol|_|) context =
     match context.Input with
     | '+' :: tail -> Some (Plus, NextChar context, context.Position)
     | '-' :: tail -> Some (Minus, NextChar context, context.Position)
+    | '*' :: '*' :: tail -> Some (Period, NextChar context, context.Position)
     | '*' :: tail -> Some (Star, NextChar context, context.Position)
     | '/' :: tail -> Some (Slash, NextChar context, context.Position)
+    | '%' :: tail -> Some (Modulo, NextChar context, context.Position)
     | '=' :: '=' :: tail -> Some (Equals, NextChar context, context.Position)
     | '=' :: tail -> Some (Assign, NextChar context, context.Position)
     | '!' :: '=' :: tail -> Some (NotEquals, NextChar context, context.Position)
@@ -71,6 +75,14 @@ let (|Symbol|_|) context =
     | '[' :: tail -> Some (LeftBracket, NextChar context, context.Position)
     | ']' :: tail -> Some (RightBracket, NextChar context, context.Position)
     | '.' :: tail -> Some (Period, NextChar context, context.Position)
+    | ',' :: tail -> Some (Comma, NextChar context, context.Position)
+    | '&' :: '&' :: tail -> Some (And, NextChar context, context.Position)
+    | '|' :: '|' :: tail -> Some (Or, NextChar context, context.Position)
+    | '&' :: tail -> Some (Ampersand, NextChar context, context.Position)
+    | '|' :: tail -> Some (Bar, NextChar context, context.Position)
+    | '!' :: tail -> Some (Not, NextChar context, context.Position)
+    | '^' :: tail -> Some (Xor, NextChar context, context.Position)
+    | '~' :: tail -> Some (Tilde, NextChar context, context.Position)
     | _ -> None
 
 let GetString context =
@@ -88,9 +100,12 @@ let (|Keyword|_|) context =
     match GetString context with
     | Some ("decl", tail, pos) -> Some (Token.Keyword "decl", tail, pos)
     | Some ("if", tail, pos) -> Some (Token.Keyword "if", tail, pos)
+    | Some ("else", tail, pos) -> Some (Token.Keyword "else", tail, pos)
     | Some ("while", tail, pos) -> Some (Token.Keyword "while", tail, pos)
     | Some ("for", tail, pos) -> Some (Token.Keyword "for", tail, pos)
     | Some ("return", tail, pos) -> Some (Token.Keyword "return", tail, pos)
+    | Some ("new", tail, pos) -> Some (Token.Keyword "new", tail, pos)
+    | Some ("match", tail, pos) -> Some (Token.Keyword "match", tail, pos)
     | _ -> None
 
 let (|Identifier|_|) context =
