@@ -13,6 +13,7 @@ let Generate tree context =
                 CgGlobal ident context |>
                 match exp with
                 | IntLit i -> CgStaticInt i
+                | StringLit s -> CgStorePooledString context.StringPool.[s]
             { context with Symbols = con.Symbols.Pop }
         | FunctionDeclaration (ident, parameters, comp) ->
             let con =
@@ -25,6 +26,19 @@ let Generate tree context =
                 stmts 
                 |> List.fold (fun state stmt -> StmtF stmt state) context
             { context with Symbols = con.Symbols.Pop }
+        | Assignment (ident, exp) ->
+            ExprF exp context (fun acc ->
+            match context.Symbols.[ident] with
+            | Global (valType, accessType, storageType, _) -> 
+                match valType with
+                | "int" -> 
+                    CgStoreGlobal ident acc
+                | "string" -> 
+                    CgLoadGlobal ident acc |>
+                    CgStoreReference 
+            | Local (valType, accessType, storageType, pos) ->
+                CgStoreLocal pos acc)
+                
         | _ -> failwith "Invalid statement."
     // Evaluates locals
     and ExprF expr context con =
@@ -38,5 +52,10 @@ let Generate tree context =
                     | Minus -> CgSub acc
                     | Star -> CgMul acc
                     | Slash -> CgDiv acc))
-    tree 
-    |> List.fold (fun cont stmt -> StmtF stmt cont) context
+        |> con
+    let pooled =
+        context.StringPool 
+        |> Map.fold (fun con s i ->
+            CgPoolString s i con) context
+    tree
+    |> List.fold (fun cont stmt -> StmtF stmt cont) pooled

@@ -38,7 +38,7 @@ type StorageType =
 type Symbol<'T> =
     | Global of Type : string * AccessType : AccessType * StorageType : StorageType * Value : 'T
     | Function of Type : string
-    | Local of Type : string * AccessType : AccessType * StorageType : StorageType * Position : int * Value : 'T
+    | Local of Type : string * AccessType : AccessType * StorageType : StorageType * Position : int
     | Parameter of Type : string * AccessType : AccessType * StorageType : StorageType * Position : int
     | Member of Type : string * AccessType : AccessType * StorageType : StorageType * Offset : int * Value : 'T
     | Definition of AccessType : AccessType * StorageType : StorageType * Size : int * Value : 'T 

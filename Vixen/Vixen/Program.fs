@@ -9,7 +9,15 @@ let main argv =
     let parseTree = Parser.Parse tokens
     let acontext = Analyzer.Analyze parseTree
     let stream = new StreamWriter (File.Open ("..\\..\\..\\Tests\\test1.s", FileMode.Open))
-    Generator.Generate parseTree { Symbols = acontext.Symbols; StringPool = acontext.StringPool
-     |> Set.toList; ObjectPool = acontext.ObjectPool; Stream = stream; RegisterStack = [] } |> ignore
+    Generator.Generate parseTree 
+        { 
+            Symbols = acontext.Symbols
+            StringPool = acontext.StringPool
+                |> Set.toList 
+                |> List.mapi (fun i s -> (s, i))
+                |> Map.ofList
+            ObjectPool = acontext.ObjectPool
+            Stream = stream; RegisterStack = [] 
+        } |> ignore
     stream.Close ()
     0

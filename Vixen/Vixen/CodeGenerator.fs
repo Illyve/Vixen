@@ -9,7 +9,7 @@ let registers = [ "%r8"; "%r9"; "%r10"; "%r11" ]
 type CodeContext = 
     { 
         Symbols : Table<Symbol<Expression>>
-        StringPool : List<string>
+        StringPool : Map<string, int>
         ObjectPool : Table<Expression> 
         Stream : StreamWriter
         RegisterStack : string list
@@ -30,7 +30,7 @@ let PeekRegister context =
 let AllocRegister context =
     let r = 
         registers |> List.find (fun r -> not (List.contains r context.RegisterStack))
-    (r, context)
+    (r, { context with RegisterStack = r :: context.RegisterStack })
 
 let CgGlobal x context =
     context.Stream.WriteLine (sprintf "\t.globl\t%s" x)
@@ -38,12 +38,35 @@ let CgGlobal x context =
     context.Stream.WriteLine (sprintf "%s:" x)
     context
 
+let CgStoreGlobal x context =
+    let (r, context1) = PopRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %s(%%rip)" r x)
+    context
+
+let CgLoadGlobal x context =
+    let (r, context1) = AllocRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %s" x r)
+    context1
+
+let CgLoadGlobalReference x context =
+    let (r, context1) = AllocRegister context
+    context.Stream.WriteLine (sprintf "\tleaq\t%s, %s" x r)
+    context1
+
 let CgStaticInt x context =
-    context.Stream.WriteLine (sprintf "\t.quad %d" x)
+    context.Stream.WriteLine (sprintf "\t.quad\t%d" x)
     context
 
 let CgStaticString x context =
-    context.Stream.WriteLine (sprintf "\t.ascii \"%s\0\"" x)
+    context.Stream.WriteLine (sprintf "\t.ascii\t\"%s\0\"" x)
+    context
+
+let CgPoolString s i context =
+    context.Stream.WriteLine (sprintf ".LC%d:" i)
+    CgStaticString s context
+
+let CgStorePooledString i context =
+    context.Stream.WriteLine (sprintf "\t.quad\t.LC%d" i)
     context
 
 let CgFunctionStart x context =
@@ -58,15 +81,31 @@ let CgFunctionStart x context =
     context
 
 let CgFunctionEnd context =
-    context.Stream.WriteLine "\taddq\t$48,\t$rsp"
+    context.Stream.WriteLine "\taddq\t$48, %rsp"
     context.Stream.WriteLine "\tpopq\t%rbp"
     context.Stream.WriteLine "\tret"
     context
 
-let CgLocal context pos =
-    let (r, context) = PopRegister context
+let CgStoreLocal pos context =
+    let (r, context1) = PopRegister context
     context.Stream.WriteLine (sprintf "\tmovq\t%s, %d(%%rbp)" r pos)
+    context1
+
+let CgLoadLocal pos context =
+    let (r, context1) = AllocRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%d(%%rbp), %s" pos r)
+    context1
+
+let CgDereference context =
+    let r = PeekRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t(%s), %s" r r)
     context
+
+let CgStoreReference context =
+    let (r1, context1) = PopRegister context
+    let (r2, context2) = PopRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, (%s)" r1 r2)
+    context2
 
 let CgLoadInt x context = 
     let (r, context) = AllocRegister context

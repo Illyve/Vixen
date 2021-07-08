@@ -46,7 +46,7 @@ let Analyze input =
             let valType = GetType exp
             let pos = 
                 context.Position - (GetSize context valType)
-            let sym = Local (Type = GetType exp, AccessType = AccessType.Value, StorageType = StorageType.Dynamic, Position = pos, Value = exp)
+            let sym = Local (Type = GetType exp, AccessType = AccessType.Value, StorageType = StorageType.Dynamic, Position = pos)
             { context with Symbols = context.Symbols.Add(ident, sym) }
         | _ -> { context with Symbols = new Table<Symbol<Expression>> (context.Symbols.List) }
     and ExprF input context =

@@ -1,6 +1,9 @@
 decl a = 4
+decl b = "dsfaef"
+decl c = "jeofaief\n"
 
 decl x = ()
 {
-
+	a = 5
+	a = 3 + 4
 }
