@@ -1,28 +1,33 @@
 ﻿module Symbols
 
-type Table<'T> (entries : Map<string, 'T> list) =
-    member private this.list = 
+type Table<'T> (entries : Map<string, 'T> list list) =
+    member this.List = 
         match entries with
-        | [] -> [ Map.empty ]
+        | [] -> [ [ Map.empty ] ]
         | _ -> entries
     member this.Add (key, value) = 
-        match this.list with
-        | head :: tail when not (head.ContainsKey key) -> new Table<'T> ((head.Add (key, value)) :: tail)
+        match this.List.Head with
+        | head :: tail when not (head.ContainsKey key) -> new Table<'T> (((head.Add (key, value)) :: tail) :: this.List)
         | _ -> invalidArg key $"The key {key} already exists in the table"
     member this.Enter () =
-        new Table<'T> (Map.empty :: this.list)
+        new Table<'T> ((Map.empty :: this.List.Head) :: this.List)
     member this.Exit count =
-        new Table<'T> (this.list.GetSlice (Some count, None))
+        new Table<'T> (this.List.Head.GetSlice (Some count, None) :: this.List)
     member this.Contains key =
-        this.list
+        this.List.Head
         |> List.exists (fun block ->
             block |> Map.containsKey key)
     member this.Item
         with get(key) =
-            this.list
+            this.List.Head
             |> List.find (fun block ->
                 block |> Map.containsKey key)
             |> Map.find key
+    member this.Pop 
+        with get() =
+            match entries with
+            | head :: tail -> new Table<'T> (tail)
+            | [] -> new Table<'T> ([])
 
 type AccessType =
     Value | Reference

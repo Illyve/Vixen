@@ -48,7 +48,7 @@ let Analyze input =
                 context.Position - (GetSize context valType)
             let sym = Local (Type = GetType exp, AccessType = AccessType.Value, StorageType = StorageType.Dynamic, Position = pos, Value = exp)
             { context with Symbols = context.Symbols.Add(ident, sym) }
-        | _ -> context
+        | _ -> { context with Symbols = new Table<Symbol<Expression>> (context.Symbols.List) }
     and ExprF input context =
         match input with
         | StringLit s -> { context with StringPool = context.StringPool.Add s }
@@ -61,12 +61,15 @@ let Analyze input =
     |> List.fold (fun c i -> StmtF i c) 
         { 
             Symbols = new Table<Symbol<Expression>> 
-                ([ 
-                Map.empty
-                    .Add("int", Definition (AccessType = AccessType.Value, StorageType = StorageType.Dynamic, Size = 8, Value = IntLit 0))
-                    .Add("string", Definition (AccessType = AccessType.Reference, StorageType = StorageType.Dynamic, Size = 8, Value = StringLit ""))
-                ])
+                (
+                    [ 
+                        [ Map.empty
+                        .Add("int", Definition (AccessType = AccessType.Value, StorageType = StorageType.Dynamic, Size = 8, Value = IntLit 0))
+                        .Add("string", Definition (AccessType = AccessType.Reference, StorageType = StorageType.Dynamic, Size = 8, Value = StringLit ""))
+                        ]
+                    ] 
+                )
             StringPool = Set.empty
-            ObjectPool = new Table<Expression> ([])
+            ObjectPool = new Table<Expression> ([ [ Map.empty ] ])
             Position = 0 
         }

@@ -1,7 +1,6 @@
-decl x = (int y)
+decl a = 4
+
+decl x = ()
 {
-	decl a = new int[4]
-	decl b = new a
-	a = a + 4
-	return a
+
 }
