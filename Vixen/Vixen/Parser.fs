@@ -16,6 +16,8 @@ let ( >>= ) first second =
 let Lift value input =
     Success (value, input)
 
+
+
 let ZeroOrMore parser =
     let rec Parse acc input =
         match parser input with
@@ -70,8 +72,12 @@ let rec ParsePrimary input =
         match tail with
         | (Token.LeftParen, _) :: tail ->
             tail 
-            |> (ZeroOrMore ParseExpression >>= fun parameters ->
-                Lift (FunctionCall (ident, parameters)))
+            |> (ZeroOrMore (ParseExpression >>= fun first ->
+                    ZeroOrMore (ParseTokens [ Token.Comma ] >>= fun _ ->
+                    ParseExpression) >>= fun parameters ->
+                    Lift (first :: parameters)) >>= fun parameters ->
+                ParseTokens [ Token.RightParen ] >>= fun _ ->
+                Lift (FunctionCall (ident, parameters |> List.collect id)))
         | _ -> 
             Success (Identifier ident, tail)
     | (Token.Keyword "new", _) :: tail ->
@@ -138,9 +144,12 @@ let ParseReturn =
 let ParseFunctionCall  =
     ParseIdentifierAsString >>= fun ident ->
     ParseTokens [ Token.LeftParen ] >>= fun _ ->
-    ZeroOrMore ParseExpression >>= fun parameters ->
+    ZeroOrMore (ParseExpression >>= fun first ->
+        ZeroOrMore (ParseTokens [ Token.Comma ] >>= fun _ ->
+        ParseExpression) >>= fun parameters ->
+        Lift (first :: parameters)) >>= fun parameters ->
     ParseTokens [ Token.RightParen ] >>= fun _ ->
-    Lift (FunctionCall (ident, parameters))
+    Lift (Statement.FunctionCall (ident, parameters |> List.collect id))
 
 let rec ParseIf =
     ParseKeyword "if" >>= fun _ ->
@@ -176,7 +185,10 @@ and ParseStatement input =
     | (Token.Keyword "while", _) :: tail -> ParseWhile input
     | (Token.Keyword "for", _) :: tail -> ParseFor input
     | (Token.Keyword "return", _) :: tail -> ParseReturn input
-    | (Token.Identifier ident, _) :: tail -> ParseAssignment input
+    | (Token.Identifier ident, _) :: tail -> 
+        match tail with
+        | (Token.Assign, _) :: tail2 -> ParseAssignment input
+        | _ -> ParseFunctionCall input
     | (token, { Line = line; Column = col }) :: tail -> Failure $"Unexpected token {token} on line: {line} column: {col}."
     | [] -> Failure $"Unexpected EOF."
 

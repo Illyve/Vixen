@@ -5,6 +5,7 @@ open Symbols
 open Parser
 
 let registers = [ "%r8"; "%r9"; "%r10"; "%r11" ]
+let funcRegisters = [ "%rcx"; "%rdx"; "%r8"; "%r9" ]
 
 type CodeContext = 
     { 
@@ -31,6 +32,16 @@ let AllocRegister context =
     let r = 
         registers |> List.find (fun r -> not (List.contains r context.RegisterStack))
     (r, { context with RegisterStack = r :: context.RegisterStack })
+
+let CgPushStack context =
+    let (r, context1) = PopRegister context
+    context.Stream.WriteLine (sprintf "\tpushq\t%s" r)
+    context1
+
+let CgPopStack context =
+    let (r, context1) = AllocRegister context
+    context.Stream.WriteLine (sprintf "\tpopq\t%s" r)
+    context1
 
 let CgGlobal x context =
     context.Stream.WriteLine (sprintf "\t.globl\t%s" x)
@@ -77,7 +88,6 @@ let CgFunctionStart x context =
     context.Stream.WriteLine "\tpushq\t%rbp"
     context.Stream.WriteLine "\tmovq\t%rsp, %rbp"
     context.Stream.WriteLine "\tsubq\t$48, %rsp"
-    context.Stream.WriteLine "\tcall\t__main"
     context
 
 let CgFunctionEnd context =
@@ -85,6 +95,29 @@ let CgFunctionEnd context =
     context.Stream.WriteLine "\tpopq\t%rbp"
     context.Stream.WriteLine "\tret"
     context
+
+let CgFunctionCall x context =
+    context.Stream.WriteLine (sprintf "\tcall\t%s" x)
+    context
+
+let CgLoadReturn context =
+    let (r, context1) = PopRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %%rax" r)
+    context1
+
+let CgStoreReturn context =
+    let (r, context1) = AllocRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%%rax, %s" r)
+    context1
+
+let CgStoreParam i pos context =
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %d(%%rbp)" funcRegisters.[i] pos)
+    context
+
+let CgLoadParam i context =
+    let (r, context1) = PopRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %s" r funcRegisters.[i])
+    context1
 
 let CgStoreLocal pos context =
     let (r, context1) = PopRegister context

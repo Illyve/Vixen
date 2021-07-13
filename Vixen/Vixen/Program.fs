@@ -8,7 +8,7 @@ let main argv =
     let tokens = Lexer.Lex input
     let parseTree = Parser.Parse tokens
     let acontext = Analyzer.Analyze parseTree
-    let stream = new StreamWriter (File.Open ("..\\..\\..\\Tests\\test1.s", FileMode.Open))
+    let stream = new StreamWriter (File.Open ("..\\..\\..\\Tests\\test1.s", FileMode.Create))
     Generator.Generate parseTree 
         { 
             Symbols = acontext.Symbols

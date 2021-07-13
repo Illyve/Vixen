@@ -1,9 +1,13 @@
 decl a = 4
 decl b = "dsfaef"
-decl c = "jeofaief\n"
+decl c = "%def\n"
 
-decl x = ()
+decl main = ()
 {
-	a = 5
-	a = 3 + 4
+	printf (c, e(4))
+}
+
+decl e = (int x)
+{
+	return x
 }
