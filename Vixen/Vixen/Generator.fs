@@ -14,6 +14,7 @@ let Generate tree context =
                 match exp with
                 | IntLit i -> CgStaticInt i
                 | StringLit s -> CgStorePooledString context.StringPool.[s]
+                | Array (valType, length) -> CgStaticInt 0
             { con with Symbols = con.Symbols.Pop }
         | FunctionDeclaration (ident, parameters, comp) ->
             let con =
@@ -32,6 +33,17 @@ let Generate tree context =
                 con2 |>
                 StmtF comp |>
                 CgFunctionEnd
+            { con with Symbols = con.Symbols.Pop }
+        | Declaration (ident, exp) ->
+            let con =
+                ExprF exp context (fun acc ->
+                    match context.Symbols.[ident] with
+                    | Global (valType, _, storageType, _) ->
+                        CgStoreGlobal ident acc
+                    | Local (valType, _, storageType, pos) ->
+                        CgStoreLocal pos acc
+                    | Parameter (valType, _, storageType, pos) ->
+                        CgStoreLocal pos acc)
             { con with Symbols = con.Symbols.Pop }
         | Compound stmts ->
             let con =
@@ -116,6 +128,34 @@ let Generate tree context =
             newCon |>
             CgFunctionCall ident |>
             CgStoreReturn
+        | Array (valType, length) ->
+            ExprF length context (fun acc ->
+                match context.Symbols.[valType] with
+                | Definition (_, _, size, _) -> 
+                    acc |>
+                    CgLoadInt size |>
+                    CgAlloc)
+        | ArrayAccess (ident, index) ->
+            ExprF index context (fun con1 ->
+                match context.Symbols.[ident] with
+                | Global (valType, AccessType.Value, storageType, _) ->
+                    CgLoadGlobal ident con1
+                | Global (valType, AccessType.Reference, storageType, _) ->
+                    CgLoadGlobalReference ident con1
+                | Local (valType, AccessType.Value, storageType, pos) ->
+                    CgLoadLocal pos con1
+                | Local (valType, AccessType.Reference, storageType, pos) ->
+                    con1 |>
+                    CgLoadLocal pos |>
+                    CgDereference
+                | Parameter (valType, AccessType.Value, storageType, pos) ->
+                    CgLoadLocal pos con1
+                | Parameter (valType, AccessType.Reference, storageType, pos) ->
+                    con1 |>
+                    CgLoadLocal pos |>
+                    CgDereference) |>
+                CgAdd |>
+                CgDereference
         |> con
     let pooled =
         context.StringPool 

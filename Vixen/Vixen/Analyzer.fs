@@ -23,6 +23,15 @@ let GetType context exp =
         | Member (valType, _, _, _, _) -> valType
         | Definition (_, _, _, _) -> ident
         | Function valType -> valType
+    | Array (valType, _) -> valType
+    | ArrayAccess (ident, _) -> 
+        match context.Symbols.[ident] with
+        | Global (valType, _, _, _) -> valType
+        | Local (valType, _, _, _) -> valType
+        | Symbol.Parameter (valType, _, _, _) -> valType
+        | Member (valType, _, _, _, _) -> valType
+        | Definition (_, _, _, _) -> ident
+        | Function valType -> valType
     | _ -> failwith "Unexpected type."
 
 let GetSize context valType =
@@ -55,7 +64,9 @@ let Analyze input =
             let pos = 
                 context.Position - (GetSize context valType)
             let sym = Local (Type = GetType context exp, AccessType = AccessType.Value, StorageType = StorageType.Dynamic, Position = pos)
-            { context with Symbols = context.Symbols.Add(ident, sym) }
+            { context with Symbols = context.Symbols.Add(ident, sym); Position = pos }
+        | Compound stmts ->
+            stmts |> List.fold (fun con stmt -> StmtF stmt con) context
         | _ -> { context with Symbols = new Table<Symbol<Expression>> (context.Symbols.List) }
     and ExprF input context =
         match input with
@@ -82,4 +93,4 @@ let Analyze input =
                 ObjectPool = new Table<Expression> ([ [ Map.empty ] ])
                 Position = 0 
             }
-    { output with Symbols = new Table<Symbol<Expression>> (output.Symbols.List |> List.rev)}
+    { output with Symbols = (new Table<Symbol<Expression>> (output.Symbols.List |> List.rev)).Pop }

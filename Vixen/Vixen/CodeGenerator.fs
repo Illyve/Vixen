@@ -168,3 +168,19 @@ let CgDiv context =
     let r2 = PeekRegister context1
     context.Stream.WriteLine (sprintf "\tdivq\t%s, %s" r1 r2)
     context1
+
+let CgAlloc context =
+    let (sizer, context1) = PopRegister context
+    let (countr, context2) = PopRegister context1
+    let (r, context3) = AllocRegister context2
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %%rcx" countr)
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %%rdx" sizer)
+    context.Stream.WriteLine (sprintf "\tcall\tcalloc")
+    context.Stream.WriteLine (sprintf "\tmovq\t%%rax, %s" r)
+    context3
+
+let CgDealloc context =
+    let (r, context1) = PopRegister context
+    context.Stream.WriteLine (sprintf "\tmovq\t%s, %%rcx" r)
+    context.Stream.WriteLine (sprintf "\tcall\tfree")
+    context1

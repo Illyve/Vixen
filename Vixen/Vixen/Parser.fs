@@ -44,6 +44,7 @@ and Expression =
     | StringLit of string
     | Identifier of string
     | Array of string * Expression
+    | ArrayAccess of string * Expression
     | Object of string
     | FunctionCall of string * Expression list
     | Parameter of string * string
@@ -78,6 +79,11 @@ let rec ParsePrimary input =
                     Lift (first :: parameters)) >>= fun parameters ->
                 ParseTokens [ Token.RightParen ] >>= fun _ ->
                 Lift (FunctionCall (ident, parameters |> List.collect id)))
+        | (Token.LeftBracket, _) :: tail ->
+            tail |>
+            (ParseExpression >>= fun index ->
+            ParseTokens [ Token.RightBracket ] >>= fun _ ->
+            Lift (ArrayAccess (ident, index)))
         | _ -> 
             Success (Identifier ident, tail)
     | (Token.Keyword "new", _) :: tail ->
@@ -198,7 +204,7 @@ and ParseCompound =
         match input with
         | (Token.RightBrace, _) :: remaining -> 
             remaining
-            |> Lift (Compound acc)
+            |> Lift (Compound (acc |> List.rev))
         | _ -> 
             input
             |> (ParseStatement >>= fun stmt ->
