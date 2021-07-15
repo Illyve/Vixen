@@ -1,5 +1,8 @@
+decl a = new int[4]
+
 decl main = ()
 {
-	decl a = new int[4]
+	
+	decl b = a[0]
 }
 

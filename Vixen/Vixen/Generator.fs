@@ -135,6 +135,27 @@ let Generate tree context =
                     acc |>
                     CgLoadInt size |>
                     CgAlloc)
+        | ArrayAccess (ident, index) ->
+            ExprF index context (fun con1 ->
+                match context.Symbols.[ident] with
+                | Global (valType, AccessType.Value, storageType, _) ->
+                    CgLoadGlobal ident con1
+                | Global (valType, AccessType.Reference, storageType, _) ->
+                    CgLoadGlobalReference ident con1
+                | Local (valType, AccessType.Value, storageType, pos) ->
+                    CgLoadLocal pos con1
+                | Local (valType, AccessType.Reference, storageType, pos) ->
+                    con1 |>
+                    CgLoadLocal pos |>
+                    CgDereference
+                | Parameter (valType, AccessType.Value, storageType, pos) ->
+                    CgLoadLocal pos con1
+                | Parameter (valType, AccessType.Reference, storageType, pos) ->
+                    con1 |>
+                    CgLoadLocal pos |>
+                    CgDereference) |>
+                CgAdd |>
+                CgDereference
         |> con
     let pooled =
         context.StringPool 
